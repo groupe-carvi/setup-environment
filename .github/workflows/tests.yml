@@ -1,0 +1,50 @@
+name: tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  test:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, windows-latest, macos-latest]
+        rust: [true, false]
+        node-version: [22, lts/*, ""]
+        bun-version: [latest, ""]
+    runs-on: ${{  matrix.platform }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Environment
+        uses: ./
+        with:
+          rust: ${{ matrix.rust }}
+
+      - name: Test Rust
+        if: matrix.rust
+        run: |
+          echo "Running Rust tests..."
+          echo "Rustup Version: ${{ steps.node.outputs.rustup-version }}"
+          cargo test
+
+      - name: Test Node
+        if: matrix.node-version
+        run: |
+          echo "Running Node tests..."
+          echo "Node Version: ${{ steps.node.outputs.node-version }}"
+          npm install
+          npm test
+
+      - name: Test Bun
+        if: matrix.bun-version
+        run: |
+          echo "Running Bun tests..."
+          echo "Node Version: ${{ steps.node.outputs.node-version }}"
+          echo "Bun Version: ${{ steps.bun.outputs.bun-version }}"
+          bun install
+          npm test
+          bun test

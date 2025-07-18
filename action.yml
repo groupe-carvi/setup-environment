@@ -1,0 +1,118 @@
+name: Setup Envrionment
+description: Setup & prepare runner for workflow related tasks
+inputs:
+  rust:
+    description: Setup Rust
+    default: "false"
+  node:
+    description: Setup Node
+    default: "false"
+  bun:
+    description: Setup Bun
+    default: "false"
+  mobile:
+    description: Setup Android / iOS
+    default: "false"
+  flutter:
+    description: Setup Flutter
+    default: "false"
+  task:
+    description: Setup Task
+    default: "false"
+outputs:
+  rustup-version:
+    description: The version of Rustup for the selected toolchain
+    value: ${{ steps.rust.outputs.name }}
+  node-version:
+    description: The version of Node that was installed
+    value: ${{ steps.node.outputs.node-version }}
+  bun-version:
+    description: The selected Bun that was installed
+    value: ${{ steps.bun.outputs.bun-version }}
+  ndk-path:
+    description: Installation path
+    value: ${{ steps.ndk.outputs.ndk-path }}
+  ndk-full-version:
+    description: Full NDK version
+    value: ${{ steps.ndk.outputs.ndk-full-version }}
+  flutter-channel:
+    description: The channel of Flutter selected release
+    value: "${{ steps.flutter.outputs.CHANNEL }}"
+  flutter-version:
+    description: The version Flutter selected channel
+    value: "${{ steps.flutter.outputs.VERSION }}"
+  flutter-architecture:
+    description: The selected Flutter CPU architecture
+    value: "${{ steps.flutter-action.outputs.ARCHITECTURE }}"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Rust
+      if: inputs.rust == 'true' || matrix.target || matrix.rust-toolchain
+      id: rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust-toolchain || 'stable' }}
+        targets: ${{ matrix.target || '' }}
+
+    - name: Setup Node
+      if: inputs.node == 'true' || matrix.node-version ||  inputs.bun == 'true' || matrix.bun-version
+      id: node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version || 'lts/*' }}
+
+    - name: Setup Bun
+      if: inputs.bun == 'true' || matrix.bun-version
+      id: bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: ${{ matrix.bun-version || 'latest' }}
+
+    - name: Setup Java
+      if: inputs.flutter == 'true' || matrix.ndk-version || matrix.java-version || matrix.java-distribution
+      id: java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java-version || 21 }}
+        distribution: ${{ matrix.java-distribution || 'temurin' }}
+        cache: gradle
+
+    - name: Setup NDK
+      if: runner.os == 'Linux' && inputs.mobile == 'true' && (inputs.flutter == 'true'|| matrix.ndk-version)
+      id: ndk
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: ${{ matrix.ndk-version || 'r28c' }}
+        link-to-sdk: true
+        local-cache: true
+
+    # TODO check after https://github.com/nttld/setup-ndk/issues/518 is fixed
+    - name: Restore Android Symlinks
+      if: runner.os == 'Linux' && inputs.mobile == 'true' && (inputs.flutter == 'true'|| matrix.ndk-version || matrix.flutter-channel || matrix.flutter-version || matrix.flutter-architecture)
+      shell: ${{ matrix.shell || 'bash' }}
+      run: |
+        directory="${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+        find "$directory" -type l | while read link; do
+            current_target=$(readlink "$link")
+            new_target="$directory/$(basename "$current_target")"
+            ln -sf "$new_target" "$link"
+            echo "Changed $(basename "$link") from $current_target to $new_target"
+        done
+
+    - name: Setup Flutter
+      if: inputs.flutter == 'true' || matrix.flutter-channel || matrix.flutter-version || matrix.flutter-architecture
+      id: flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: ${{ matrix.flutter-channel || 'stable' }}
+        flutter-version: ${{ matrix.flutter-version || '' }}
+        architecture: ${{ matrix.flutter-architecture || runner.arch  }}
+
+    - name: Setup Tasks
+      if: inputs.task == 'true' || matrix.task-version
+      id: task
+      uses: arduino/setup-task@v2
+      with:
+        version: ${{ matrix.task-version || '3.x' }}

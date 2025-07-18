@@ -1,0 +1,22 @@
+name: Flutter Workflow
+
+on:
+  - push:
+  - pull_request:
+
+jobs:
+  flutter-simple:
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: groupe-carvi/setup-environment@v1
+        with:
+          mobile: true
+          flutter: true
+
+      - name: Use flutter
+        run: flutter get

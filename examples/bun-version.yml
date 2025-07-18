@@ -1,0 +1,23 @@
+name: Bun Workflow
+
+on:
+  - push:
+  - pull_request:
+
+jobs:
+  bun-simple:
+    strategy:
+      fail-fast: false
+      matrix:
+        bun-version: ["latest", "1.x"]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Environment
+        uses: groupe-carvi/setup-environment@v1
+
+      - name: Use Bun
+        run: bun install

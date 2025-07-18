@@ -1,0 +1,23 @@
+name: Rust Workflow
+
+on:
+  - push:
+  - pull_request:
+
+jobs:
+  rust-simple:
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["lts/*", "22"]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Environment
+        uses: groupe-carvi/setup-environment@v1
+
+      - name: Use Node.js
+        run: npm install

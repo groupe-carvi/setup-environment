@@ -1,0 +1,62 @@
+name: Rust Workflow
+
+on:
+  - push:
+  - pull_request:
+
+jobs:
+  rust-targets:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Unix
+          - platform: ubuntu-latest
+            target: ""
+            args: ""
+            shell: bash
+          # Windows
+          - platform: windows-latest
+            target: aarch64-pc-windows-msvc
+            args: --target aarch64-pc-windows-msvc --bundles nsis
+            shell: pwsh
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            args: --target x86_64-pc-windows-msvc
+            shell: pwsh
+          # MacOS
+          - platform: macos-latest # for Arm based macs (M1 and above).
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+            shell: bash
+          - platform: macos-latest # for Intel based macs.
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+            shell: bash
+          # Android
+          - platform: ubuntu-latest
+            target: aarch64-linux-android,arm-linux-androideabi,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+            args: ""
+            shell: bash
+          # iOS
+          - platform: macos-latest
+            target: aarch64-apple-ios
+            args: --target aarch64-apple-ios
+            shell: bash
+          - platform: macos-latest
+            target: x86_64-apple-ios
+            args: --target x86_64-apple-ios
+            shell: bash
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: groupe-carvi/setup-environment@v1
+
+      - name: Use Rust / Cargo
+        run: cargo install

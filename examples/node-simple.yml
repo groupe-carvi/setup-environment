@@ -1,0 +1,20 @@
+name: Node.js Workflow
+
+on:
+  - push:
+  - pull_request:
+
+jobs:
+  node-simple:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Environment
+        uses: groupe-carvi/setup-environment@v1
+        with:
+          node: true
+
+      - name: Use Node.js
+        run: npm install

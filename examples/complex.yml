@@ -1,0 +1,74 @@
+name: Complex Workflow
+
+on:
+  - push:
+  - pull_request:
+
+jobs:
+  complex:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Unix
+          - platform: ubuntu-latest
+            target: ""
+            args: ""
+            shell: bash
+            bun-version: latest
+          # Windows
+          - platform: windows-latest
+            target: aarch64-pc-windows-msvc
+            args: --target aarch64-pc-windows-msvc --bundles nsis
+            shell: pwsh
+            bun-version: latest
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            args: --target x86_64-pc-windows-msvc
+            shell: pwsh
+            bun-version: latest
+          # MacOS
+          - platform: macos-latest # for Arm based macs (M1 and above).
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+            shell: bash
+            bun-version: latest
+          - platform: macos-latest # for Intel based macs.
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+            shell: bash
+            bun-version: 1
+          # Android
+          - platform: ubuntu-latest
+            target: aarch64-linux-android,arm-linux-androideabi,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+            args: ""
+            shell: bash
+            bun-version: 1
+          # iOS
+          - platform: macos-latest
+            target: aarch64-apple-ios
+            args: --target aarch64-apple-ios
+            shell: bash
+            bun-version: latest
+          - platform: macos-latest
+            target: x86_64-apple-ios
+            args: --target x86_64-apple-ios
+            shell: bash
+            bun-version: 1
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: groupe-carvi/setup-environment@v1
+
+      - name: Use Bun
+        run: bun install
+
+      - name: Use Rust / Cargo
+        run: cargo install

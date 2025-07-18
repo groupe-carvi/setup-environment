@@ -1,0 +1,20 @@
+name: Rust Workflow
+
+on:
+  - push:
+  - pull_request:
+
+jobs:
+  rust-simple:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Environment
+        uses: groupe-carvi/setup-environment@v1
+        with:
+          rust: true
+
+      - name: Use Rust / Cargo
+        run: cargo install
