@@ -55,6 +55,17 @@ jobs:
           version: bun x changeset version
           publish: bun x changeset publish
 
+      - name: Alias Release
+        id: alias
+        if: ${{ steps.changesets.outputs.published == 'true' }}
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const { alias } = await import("${{ github.workspace }}/.github/scripts/release.mjs");
+                      
+            await alias(${{ steps.changesets.outputs.publishedPackages }}, { core, context, github })
+
       - name: Get Release
         id: release
         if: ${{ steps.changesets.outputs.published == 'true' }}
