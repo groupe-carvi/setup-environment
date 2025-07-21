@@ -1,5 +1,11 @@
 # @carvi/setup-environment
 
+## 1.0.2
+
+### Patch Changes
+
+- 050cac7: fix the updateRef catch error status code & message
+
 ## 1.0.1
 
 ### Patch Changes
