@@ -49,7 +49,7 @@ export const alias = async (releases, { core, context, github }) => {
 	const { info, warning, setOutput } = core;
 	const { owner, repo } = context.repo;
 
-	const [major, minor] = version.split(".");
+	const [major, minor, patch] = version.split(".");
 
 	const aliases = [`v${major}`, `v${major}.${minor}`];
 
@@ -69,7 +69,9 @@ export const alias = async (releases, { core, context, github }) => {
 
 			info(`updated tag ${alias} → ${sha}`);
 		} catch (err) {
-			if (err.status === 404) {
+			const status = err.status || err.response?.status;
+
+			if (status === 422 && err.message.includes("Reference does not exist")) {
 				await github.rest.git.createRef({
 					owner,
 					repo,
@@ -103,6 +105,9 @@ export const alias = async (releases, { core, context, github }) => {
 
 	info(`  minor: "${minor}"`);
 	setOutput(`minor`, minor);
+
+	info(`  patch: "${patch}"`);
+	setOutput(`patch`, patch);
 };
 
 export const run = async (releases, { core, context, github }) => {
