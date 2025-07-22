@@ -63,7 +63,7 @@ runs:
   using: composite
   steps:
     - name: Setup Rust
-      if: inputs.rust == 'true' || inputs.bindgen == 'true' || matrix.target || matrix.rust-toolchain
+      if: inputs.rust == 'true' || inputs.bindgen == 'true' || inputs.cc == 'true' || inputs.cxx == 'true' || matrix.target || matrix.rust-toolchain
       id: rust
       uses: dtolnay/rust-toolchain@master
       with:
