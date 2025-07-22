@@ -19,6 +19,9 @@ inputs:
   task:
     description: Setup Task
     default: "false"
+  bindgen:
+    description: Setup Bindgen
+    default: "false"
 outputs:
   rustup-version:
     description: The version of Rustup for the selected toolchain
@@ -44,12 +47,14 @@ outputs:
   flutter-architecture:
     description: The selected Flutter CPU architecture
     value: "${{ steps.flutter-action.outputs.ARCHITECTURE }}"
-
+  llvm-path:
+    description: The LLVM installation path
+    value: ${{ steps.bindgen-linux.outputs.llvm-path || steps.bindgen-macos.outputs.llvm-path || steps.bindgen-windows.outputs.llvm-path }}
 runs:
   using: composite
   steps:
     - name: Setup Rust
-      if: inputs.rust == 'true' || matrix.target || matrix.rust-toolchain
+      if: inputs.rust == 'true' || inputs.bindgen == 'true' || matrix.target || matrix.rust-toolchain
       id: rust
       uses: dtolnay/rust-toolchain@master
       with:
@@ -117,3 +122,41 @@ runs:
       uses: arduino/setup-task@v2
       with:
         version: ${{ matrix.task-version || '3.x' }}
+
+    - name: Setup Bindgen (Linux)
+      if: runner.os == 'Linux' && inputs.bindgen == 'true'
+      id: bindgen-linux
+      shell: ${{ matrix.shell || 'bash' }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          clang \
+          llvm-dev \
+          libclang-dev \
+          pkg-config \
+          build-essential
+        echo "llvm-path=$(dirname $(dirname $(which clang)))" >> "$GITHUB_OUTPUT"
+
+    - name: Setup Bindgen (macOs)
+      if: runner.os == 'macOS' && inputs.bindgen == 'true'
+      id: bindgen-macos
+      shell: ${{ matrix.shell || 'bash' }}
+      run: |
+        brew update
+        brew install llvm pkg-config
+        echo "llvm-path=$(brew --prefix llvm)" >> "$GITHUB_OUTPUT"
+
+    - name: Setup Bindgen (Windows)
+      if: runner.os == 'Windows' && inputs.bindgen == 'true'
+      id: bindgen
+      shell: pwsh
+      run: |
+        choco install llvm --force --no-progress
+        choco install pkgconfiglite --no-progress
+        echo "llvm-path=C:\Program Files\LLVM" | Out-File -Encoding utf8 -NoNewline -FilePath $env:GITHUB_OUTPUT
+
+    - name: Setup Bindgen Environment Variables (non-Linux)
+      if: runner.os != 'Linux' && inputs.bindgen == 'true'
+      shell: bash
+      run: |
+        echo "BINDGEN_EXTRA_CLANG_ARGS=-I$(clang -E -x c++ - -v < /dev/null 2>&1 | grep '^ /' | head -n 1 | xargs)" >> $GITHUB_ENV
