@@ -36,19 +36,19 @@ outputs:
     description: The version of Node that was installed
     value: ${{ steps.node.outputs.node-version }}
   bun-version:
-    description: The selected Bun that was installed
+    description: The version of Bun that was installed
     value: ${{ steps.bun.outputs.bun-version }}
   ndk-path:
-    description: Installation path
+    description: The NDK installation path
     value: ${{ steps.ndk.outputs.ndk-path }}
   ndk-full-version:
-    description: Full NDK version
+    description: The version of NDK that was installed
     value: ${{ steps.ndk.outputs.ndk-full-version }}
   flutter-channel:
-    description: The channel of Flutter selected release
+    description: The channel of Flutter that was installed
     value: "${{ steps.flutter.outputs.CHANNEL }}"
   flutter-version:
-    description: The version Flutter selected channel
+    description: The version of Flutter that was installed
     value: "${{ steps.flutter.outputs.VERSION }}"
   flutter-architecture:
     description: The selected Flutter CPU architecture
