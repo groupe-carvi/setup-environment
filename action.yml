@@ -53,6 +53,7 @@ runs:
       id: rust
       uses: dtolnay/rust-toolchain@master
       with:
+        components: rustfmt
         toolchain: ${{ matrix.rust-toolchain || 'stable' }}
         targets: ${{ matrix.target || '' }}
 
