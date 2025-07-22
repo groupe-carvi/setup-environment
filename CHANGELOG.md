@@ -1,5 +1,13 @@
 # @carvi/setup-environment
 
+## 1.0.3
+
+### Patch Changes
+
+- c12129b: add bindgen setup
+- 5062b0e: add cc setup
+- a276095: add rust component rustfmt
+
 ## 1.0.2
 
 ### Patch Changes
