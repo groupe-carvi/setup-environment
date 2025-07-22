@@ -22,6 +22,12 @@ inputs:
   bindgen:
     description: Setup Bindgen
     default: "false"
+  cc:
+    description: Setup CC
+    default: "false"
+  cxx:
+    description: Setup CXX
+    default: "false"
 outputs:
   rustup-version:
     description: The version of Rustup for the selected toolchain
@@ -50,6 +56,9 @@ outputs:
   llvm-path:
     description: The LLVM installation path
     value: ${{ steps.bindgen-linux.outputs.llvm-path || steps.bindgen-macos.outputs.llvm-path || steps.bindgen-windows.outputs.llvm-path }}
+  cmake-path:
+    description: The CMake installation path
+    value: ${{ steps.cpp-linux.outputs.cmake-path || steps.cpp-macos.outputs.cmake-path || steps.cpp-windows.outputs.cmake-path }}
 runs:
   using: composite
   steps:
@@ -160,3 +169,37 @@ runs:
       shell: bash
       run: |
         echo "BINDGEN_EXTRA_CLANG_ARGS=-I$(clang -E -x c++ - -v < /dev/null 2>&1 | grep '^ /' | head -n 1 | xargs)" >> $GITHUB_ENV
+
+    - name: Setup C/C++ (Linux)
+      if: runner.os == 'Linux' && (inputs.cc == 'true' || inputs.cxx == 'true')
+      id: cpp-linux
+      shell: ${{ matrix.shell || 'bash' }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential
+        if [[ "${{ inputs.cxx }}" == "true" ]]; then
+          sudo apt-get install -y g++ cmake
+          echo "cmake-path=$(which cmake)" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Setup C/C++  (macOS)
+      if: runner.os == 'macOS' && (inputs.cc == 'true' || inputs.cxx == 'true')
+      id: cpp-macos
+      shell: ${{ matrix.shell || 'bash' }}
+      run: |
+        xcode-select --install || true
+        if [[ "${{ inputs.cxx }}" == "true" ]]; then
+          brew install cmake
+          echo "cmake-path=$(which cmake)" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Setup C/C++  (Windows)
+      if: runner.os == 'Windows' && (inputs.cc == 'true' || inputs.cxx == 'true')
+      id: cpp-windows
+      shell: pwsh
+      run: |
+        Write-Output "MSVC with C/C++ support is preinstalled on GitHub-hosted Windows runners"
+        if ("${{ inputs.cxx }}" -eq "true") {
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' --no-progress
+          echo "cmake-path=$((Get-Command cmake).Source)" | Out-File -Encoding utf8 -NoNewline -FilePath $env:GITHUB_OUTPUT
+        }
