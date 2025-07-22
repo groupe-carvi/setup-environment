@@ -1,5 +1,11 @@
 # @carvi/setup-environment
 
+## 1.0.4
+
+### Patch Changes
+
+- 459193c: fix rust setup on cc or cxx setup
+
 ## 1.0.3
 
 ### Patch Changes
